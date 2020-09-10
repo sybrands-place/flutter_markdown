@@ -30,6 +30,35 @@ const List<String> _kBlockTags = const <String>[
   'tr'
 ];
 
+const List<String> _characters = [
+  'a',
+  'b',
+  'c',
+  'd',
+  'e',
+  'f',
+  'g',
+  'h',
+  'i',
+  'j',
+  'k',
+  'l',
+  'm',
+  'n',
+  'o',
+  'p',
+  'q',
+  'r',
+  's',
+  't',
+  'u',
+  'v',
+  'w',
+  'x',
+  'y',
+  'z'
+];
+
 const List<String> _kListTags = const <String>['ul', 'ol'];
 
 bool _isBlockTag(String tag) => _kBlockTags.contains(tag);
@@ -41,7 +70,7 @@ class _BlockElement {
 
   final String tag;
   final List<Widget> children = <Widget>[];
-
+  bool isAlphaNumbering = false;
   int nextListIndex = 0;
 }
 
@@ -174,12 +203,17 @@ class MarkdownBuilder implements md.NodeVisitor {
     }
 
     var start;
+    var isAlpha = false;
     if (_isBlockTag(tag)) {
       _addAnonymousBlockIfNeeded();
       if (_isListTag(tag)) {
         _listIndents.add(tag);
-        if (element.attributes["start"] != null)
+        if (element.attributes["start"] != null) {
           start = int.parse(element.attributes["start"]) - 1;
+          if (start == 0) {
+            isAlpha = true;
+          }
+        }
       } else if (tag == 'blockquote') {
         _isInBlockquote = true;
       } else if (tag == 'table') {
@@ -194,7 +228,10 @@ class MarkdownBuilder implements md.NodeVisitor {
         ));
       }
       var bElement = _BlockElement(tag);
-      if (start != null) bElement.nextListIndex = start;
+      if (start != null) {
+        bElement.nextListIndex = start;
+        bElement.isAlphaNumbering = isAlpha;
+      }
       _blocks.add(bElement);
     } else {
       _addParentInlineIfNeeded(_blocks.last.tag);
@@ -432,11 +469,17 @@ class MarkdownBuilder implements md.NodeVisitor {
       );
     }
 
-    final int index = _blocks.last.nextListIndex;
+    final block = _blocks.last;
+    final int index = block.nextListIndex;
+
+    var result = '${index + 1}';
+    if (block.isAlphaNumbering) {
+      result = _characters[index % (_characters.length - 1)];
+    }
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Text(
-        '${index + 1}.',
+        '$result.',
         textAlign: TextAlign.right,
         style: styleSheet.listBullet,
       ),
