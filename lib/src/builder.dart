@@ -324,12 +324,14 @@ class MarkdownBuilder implements md.NodeVisitor {
             bullet = _buildBullet(_listIndents.last);
           }
           // See #147 and #169
+          final block = _blocks.last;
           child = Row(
             textBaseline: TextBaseline.alphabetic,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             children: <Widget>[
               SizedBox(
-                width: styleSheet.listIndent,
+                width:
+                    styleSheet.listIndent + (block.isAlphaNumbering ? 12.0 : 0),
                 child: bullet,
               ),
               Expanded(child: child)
@@ -474,7 +476,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
     var result = '${index + 1}';
     if (block.isAlphaNumbering) {
-      result = '\t' + _characters[(index + 1) % _characters.length];
+      result = _characters[(index + 1) % _characters.length];
     }
     return Padding(
       padding: const EdgeInsets.only(right: 4),
