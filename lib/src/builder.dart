@@ -474,7 +474,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
     var result = '${index + 1}';
     if (block.isAlphaNumbering) {
-      result = _characters[index % (_characters.length - 1)];
+      result = _characters[(index + 1) % _characters.length];
     }
     return Padding(
       padding: const EdgeInsets.only(right: 4),
