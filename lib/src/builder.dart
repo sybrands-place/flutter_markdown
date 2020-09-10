@@ -210,7 +210,7 @@ class MarkdownBuilder implements md.NodeVisitor {
         _listIndents.add(tag);
         if (element.attributes["start"] != null) {
           start = int.parse(element.attributes["start"]) - 1;
-          if (start == 0) {
+          if (start == -1) {
             isAlpha = true;
           }
         }
