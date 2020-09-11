@@ -103,7 +103,7 @@ class MarkdownStyleSheet {
       blockSpacing: 8.0,
       listIndent: 24.0,
       listBullet: theme.textTheme.bodyText2,
-      listText: theme.tabBarTheme.bodyText2,
+      listText: theme.textTheme.bodyText2,
       tableHead: const TextStyle(fontWeight: FontWeight.w600),
       tableBody: theme.textTheme.bodyText2,
       tableHeadAlign: TextAlign.center,
