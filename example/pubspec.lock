@@ -77,10 +77,12 @@ packages:
   markdown:
     dependency: transitive
     description:
-      name: markdown
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.5"
+      path: "."
+      ref: letter-ordered-list
+      resolved-ref: b5c46c3197ab257d2a1af3c775fdb0dee8ad020b
+      url: "https://github.com/sybrands-place/markdown.git"
+    source: git
+    version: "3.0.0-dev"
   matcher:
     dependency: transitive
     description:
