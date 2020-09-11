@@ -483,7 +483,7 @@ class MarkdownBuilder implements md.NodeVisitor {
       child: Text(
         '$result.',
         textAlign: TextAlign.right,
-        style: styleSheet.listBullet,
+        style: styleSheet.listText,
       ),
     );
   }
