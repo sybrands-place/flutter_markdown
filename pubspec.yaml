@@ -11,7 +11,7 @@ dependencies:
   markdown:
     git:
       url: https://github.com/sybrands-place/markdown.git
-      ref: letter-ordered-list
+      ref: 3.0.0-patched-14102020
   meta: ^1.1.7
   path: ^1.6.4
 

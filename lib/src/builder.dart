@@ -104,8 +104,8 @@ class _InlineElement {
 /// A delegate used by [MarkdownBuilder] to control the widgets it creates.
 abstract class MarkdownBuilderDelegate {
   /// Returns a gesture recognizer to use for an `a` element with the given
-  /// `href` attribute.
-  GestureRecognizer createLink(String href);
+  /// text, `href` attribute, and title.
+  GestureRecognizer createLink(String text, String href, String title);
 
   /// Returns formatted text to use to display the given contents of a `pre`
   /// element.
@@ -166,6 +166,12 @@ class MarkdownBuilder implements md.NodeVisitor {
   String _currentBlockTag;
   bool _isInBlockquote = false;
   final List<String> _tags = <String>[];
+
+  /// The soft line break pattern is use to identify the spaces at the end of a
+  /// line of text and the leading spaces in the immediately following the line
+  /// of text. These spaces are removed in accordance with the Markdown
+  /// specification on soft line breaks when lines of text are joined.
+  final RegExp _softLineBreakPattern = RegExp(r" ?\n *");
 
   /// Returns widgets that display the given Markdown nodes.
   ///
@@ -244,10 +250,26 @@ class MarkdownBuilder implements md.NodeVisitor {
     }
 
     if (tag == 'a') {
-      _linkHandlers.add(delegate.createLink(element.attributes['href']));
+      String text = extractTextFromElement(element);
+      String destination = element.attributes['href'];
+      String title = element.attributes['title'] ?? "";
+
+      _linkHandlers.add(
+        delegate.createLink(text, destination, title),
+      );
     }
 
     return true;
+  }
+
+  String extractTextFromElement(element) {
+    return element is md.Element && (element.children?.isNotEmpty ?? false)
+        ? element.children
+            .map((e) => e is md.Text ? e.text : extractTextFromElement(e))
+            .join("")
+        : ((element.attributes?.isNotEmpty ?? false)
+            ? element.attributes["alt"]
+            : "");
   }
 
   @override
@@ -277,7 +299,7 @@ class MarkdownBuilder implements md.NodeVisitor {
               : _inlines.last.style,
           text: _isInBlockquote
               ? text.text
-              : text.text.replaceAll(RegExp(r" ?\n"), " "),
+              : text.text.replaceAll(_softLineBreakPattern, " "),
           recognizer: _linkHandlers.isNotEmpty ? _linkHandlers.last : null,
         ),
         textAlign: _textAlignForBlockTag(_currentBlockTag),
@@ -561,7 +583,7 @@ class MarkdownBuilder implements md.NodeVisitor {
             ? List.from(previousTextSpan.children)
             : [previousTextSpan];
         children.add(child.text);
-        TextSpan mergedSpan = TextSpan(children: children);
+        TextSpan mergedSpan = _mergeSimilarTextSpans(children);
         mergedTexts.add(_buildRichText(
           mergedSpan,
           textAlign: textAlign,
@@ -575,7 +597,7 @@ class MarkdownBuilder implements md.NodeVisitor {
             ? List.from(previousTextSpan.children)
             : [previousTextSpan];
         children.add(child.textSpan);
-        TextSpan mergedSpan = TextSpan(children: children);
+        TextSpan mergedSpan = _mergeSimilarTextSpans(children);
         mergedTexts.add(
           _buildRichText(
             mergedSpan,
@@ -623,6 +645,39 @@ class MarkdownBuilder implements md.NodeVisitor {
     if (blockTag == "hr") print("Markdown did not handle hr for alignment");
     if (blockTag == "li") print("Markdown did not handle li for alignment");
     return WrapAlignment.start;
+  }
+
+  /// Combine text spans with equivalent properties into a single span.
+  TextSpan _mergeSimilarTextSpans(List<TextSpan> textSpans) {
+    if (textSpans == null || textSpans.length < 2) {
+      return TextSpan(children: textSpans);
+    }
+
+    List<TextSpan> mergedSpans = <TextSpan>[textSpans.first];
+
+    for (int index = 1; index < textSpans.length; index++) {
+      TextSpan nextChild = textSpans[index];
+      if (nextChild is TextSpan &&
+          nextChild.recognizer == mergedSpans.last.recognizer &&
+          nextChild.semanticsLabel == mergedSpans.last.semanticsLabel &&
+          nextChild.style == mergedSpans.last.style) {
+        TextSpan previous = mergedSpans.removeLast();
+        mergedSpans.add(TextSpan(
+          text: previous.toPlainText() + nextChild.toPlainText(),
+          recognizer: previous.recognizer,
+          semanticsLabel: previous.semanticsLabel,
+          style: previous.style,
+        ));
+      } else {
+        mergedSpans.add(nextChild);
+      }
+    }
+
+    // When the mergered spans compress into a single TextSpan return just that
+    // TextSpan, otherwise bundle the set of TextSpans under a single parent.
+    return mergedSpans.length == 1
+        ? mergedSpans.first
+        : TextSpan(children: mergedSpans);
   }
 
   Widget _buildRichText(TextSpan text, {TextAlign textAlign}) {

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import '../shared/markdown_demo_widget.dart';
 import '../shared/markdown_extensions.dart';
 
@@ -100,14 +101,25 @@ class DemoNotesView extends StatelessWidget {
   // Handle the link. The [href] in the callback contains information
   // from the link. The url_launcher package or other similar package
   // can be used to execute the link.
-  void linkOnTapHandler(BuildContext context, String href) async {
+  void linkOnTapHandler(
+    BuildContext context,
+    String text,
+    String href,
+    String title,
+  ) async {
     showDialog(
       context: context,
-      builder: (context) => _createDialog(context, href),
+      builder: (context) => _createDialog(context, text, href, title),
     );
   }
 
-  Widget _createDialog(BuildContext context, String href) => AlertDialog(
+  Widget _createDialog(
+    BuildContext context,
+    String text,
+    String href,
+    String title,
+  ) =>
+      AlertDialog(
         title: Text('Reference Link'),
         content: SingleChildScrollView(
           child: ListBody(
@@ -118,7 +130,17 @@ class DemoNotesView extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                '$href',
+                'Link text: $text',
+                style: Theme.of(context).textTheme.bodyText2,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Link destination: $href',
+                style: Theme.of(context).textTheme.bodyText2,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Link title: $title',
                 style: Theme.of(context).textTheme.bodyText2,
               ),
             ],
@@ -141,7 +163,8 @@ class DemoNotesView extends StatelessWidget {
           return Markdown(
             data: snapshot.data,
             extensionSet: MarkdownExtensionSet.githubFlavored.value,
-            onTapLink: (href) => linkOnTapHandler(context, href),
+            onTapLink: (text, href, title) =>
+                linkOnTapHandler(context, text, href, title),
           );
         } else {
           return CircularProgressIndicator();
